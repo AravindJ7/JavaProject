@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${group?.name + ' - Expense Split' ?: 'Group Details'}">Group Details - Expense Split</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-calculator me-2"></i>
+                Expense Split
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/users">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/groups">
+                            <i class="fas fa-layer-group me-1"></i>Groups
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/groups">Groups</a></li>
+                <li class="breadcrumb-item active" th:text="${group.name}">Group Name</li>
+            </ol>
+        </nav>
+
+        <!-- Group Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h1 class="display-6 mb-2" th:text="${group.name}">Group Name</h1>
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Created: <span th:text="${#temporals.format(group.createdAt, 'MMM dd, yyyy')}">Jan 01, 2024</span>
+                                </p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <a th:href="@{/balances/{id}(id=${group.groupId})}" class="btn btn-info me-2">
+                                    <i class="fas fa-calculator me-1"></i>View Balances
+                                </a>
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                                    <i class="fas fa-plus me-1"></i>Add Expense
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Group Stats -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-primary mb-2">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                        <h4 th:text="${group.members.size()}">0</h4>
+                        <p class="text-muted mb-0">Members</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-success mb-2">
+                            <i class="fas fa-receipt fa-2x"></i>
+                        </div>
+                        <h4 th:text="${expenses != null ? expenses.size() : 0}">0</h4>
+                        <p class="text-muted mb-0">Expenses</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-warning mb-2">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                        <h4>
+                            <span th:if="${expenses != null and !expenses.empty}">
+                                $<span th:text="${#numbers.formatDecimal(#aggregates.sum(expenses.![amount]), 1, 2)}">0.00</span>
+                            </span>
+                            <span th:if="${expenses == null or expenses.empty}">$0.00</span>
+                        </h4>
+                        <p class="text-muted mb-0">Total Spent</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm text-center">
+                    <div class="card-body">
+                        <div class="text-info mb-2">
+                            <i class="fas fa-chart-pie fa-2x"></i>
+                        </div>
+                        <h4>
+                            <span th:if="${expenses != null and !expenses.empty and group.members != null and !group.members.empty}">
+                                $<span th:text="${#numbers.formatDecimal(#aggregates.sum(expenses.![amount]) / group.members.size(), 1, 2)}">0.00</span>
+                            </span>
+                            <span th:if="${expenses == null or expenses.empty or group.members == null or group.members.empty}">$0.00</span>
+                        </h4>
+                        <p class="text-muted mb-0">Avg per Person</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-users me-2"></i>
+                            Group Members
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${group.members != null and !group.members.empty}">
+                            <div class="row">
+                                <div class="col-md-6 col-lg-4 mb-3" th:each="member : ${group.members}">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="avatar-circle bg-primary text-white me-3">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1" th:text="${member.name}">John Doe</h6>
+                                            <small class="text-muted" th:text="${member.email}">john@example.com</small>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                th:attr="onclick='removeMemberFromGroup(' + ${group.groupId} + ', ' + ${member.userId} + ', &quot;' + ${member.name} + '&quot;)'">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${group.members == null or group.members.empty}" class="text-center py-3">
+                            <p class="text-muted mb-0">No members in this group yet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses Section -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-receipt me-2"></i>
+                            Recent Expenses
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${expenses != null and !expenses.empty}">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th><i class="fas fa-calendar me-1"></i>Date</th>
+                                            <th><i class="fas fa-tag me-1"></i>Description</th>
+                                            <th><i class="fas fa-user me-1"></i>Paid By</th>
+                                            <th><i class="fas fa-dollar-sign me-1"></i>Amount</th>
+                                            <th><i class="fas fa-users me-1"></i>Participants</th>
+                                            <th><i class="fas fa-cogs me-1"></i>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="expense : ${expenses}">
+                                            <td th:text="${#temporals.format(expense.expenseDate, 'MMM dd, yyyy')}">Jan 01, 2024</td>
+                                            <td th:text="${expense.description}">Dinner at restaurant</td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle bg-success text-white me-2" style="width: 25px; height: 25px; font-size: 12px;">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                    <span th:text="${expense.paidBy.name}">John Doe</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-success" th:text="|$${#numbers.formatDecimal(expense.amount, 1, 2)}|">$150.00</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary" th:text="${expense.participants.size()} + ' people'">3 people</span>
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-outline-info btn-sm" 
+                                                        th:onclick="'viewExpense(' + ${expense.expenseId} + ')'">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div th:if="${expenses == null or expenses.empty}" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-receipt fa-3x mb-3"></i>
+                                <h5>No Expenses Yet</h5>
+                                <p>Start tracking expenses by adding the first one.</p>
+                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                                    <i class="fas fa-plus me-1"></i>Add First Expense
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Expense Modal -->
+        <div class="modal fade" id="addExpenseModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-plus me-2"></i>
+                            Add New Expense
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/expenses}" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="groupId" th:value="${group.groupId}">
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="description" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Description
+                                    </label>
+                                    <input type="text" class="form-control" id="description" name="description"
+                                           placeholder="e.g., Dinner at restaurant" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="amount" class="form-label">
+                                        <i class="fas fa-dollar-sign me-1"></i>Amount
+                                    </label>
+                                    <input type="number" class="form-control" id="amount" name="amount"
+                                           step="0.01" min="0.01" placeholder="0.00" required>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="paidByUserId" class="form-label">
+                                        <i class="fas fa-user me-1"></i>Paid By
+                                    </label>
+                                    <select class="form-select" id="paidByUserId" name="paidByUserId" required>
+                                        <option value="">Select who paid...</option>
+                                        <option th:each="member : ${group.members}"
+                                                th:value="${member.userId}"
+                                                th:text="${member.name}">John Doe</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-users me-1"></i>Split Among
+                                    </label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="selectAll" 
+                                               onchange="toggleAllParticipants()">
+                                        <label class="form-check-label" for="selectAll">
+                                            Select All Members
+                                        </label>
+                                    </div>
+                                    <div class="form-check mt-2 mb-2">
+                                        <input class="form-check-input" type="checkbox" id="enableCustomAmounts" 
+                                               onchange="toggleCustomAmounts()">
+                                        <label class="form-check-label" for="enableCustomAmounts">
+                                            Use Custom Amounts (enter individual amounts)
+                                        </label>
+                                    </div>
+                                    <div id="participantsList" class="mt-2">
+                                        <div class="form-check participant-row" th:each="member : ${group.members}">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <input class="form-check-input participant-checkbox me-2" type="checkbox"
+                                                       name="participantUserIds"
+                                                       th:id="'participant_' + ${member.userId}"
+                                                       th:value="${member.userId}"
+                                                       onchange="updateFormValidation()">
+                                                <label class="form-check-label me-2 flex-grow-1" 
+                                                       th:for="'participant_' + ${member.userId}"
+                                                       th:text="${member.name}">John Doe</label>
+                                                <div class="input-group" style="max-width: 120px;">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="number" 
+                                                           class="form-control form-control-sm participant-amount" 
+                                                           th:id="'amount_' + ${member.userId}"
+                                                           step="0.01" 
+                                                           min="0" 
+                                                           placeholder="0.00"
+                                                           oninput="updateTotalAndValidation()"
+                                                           disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="totalValidation" class="mt-2 small"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>Add Expense
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-calculator me-1"></i>
+                Expense Split Application - Built with Spring Boot & Thymeleaf
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/app.js"></script>
+    <script>
+        function toggleAllParticipants() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.participant-checkbox');
+
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            updateFormValidation();
+        }
+        
+        function toggleCustomAmounts() {
+            const enableCustom = document.getElementById('enableCustomAmounts').checked;
+            const amountInputs = document.querySelectorAll('.participant-amount');
+            
+            amountInputs.forEach(input => {
+                input.disabled = !enableCustom;
+                if (!enableCustom) {
+                    input.value = '';
+                }
+            });
+            
+            updateTotalAndValidation();
+        }
+        
+        function updateTotalAndValidation() {
+            const enableCustom = document.getElementById('enableCustomAmounts').checked;
+            const totalInput = document.getElementById('amount');
+            const totalAmount = parseFloat(totalInput.value) || 0;
+            const totalValidation = document.getElementById('totalValidation');
+            const submitButton = document.querySelector('#addExpenseModal button[type="submit"]');
+            
+            if (!enableCustom) {
+                totalValidation.innerHTML = '';
+                submitButton.disabled = false;
+                return;
+            }
+            
+            let totalEntered = 0;
+            const checkedBoxes = document.querySelectorAll('.participant-checkbox:checked');
+            
+            checkedBoxes.forEach(checkbox => {
+                const userId = checkbox.value;
+                const amountInput = document.getElementById('amount_' + userId);
+                const amount = parseFloat(amountInput.value) || 0;
+                totalEntered += amount;
+            });
+            
+            const difference = Math.abs(totalAmount - totalEntered);
+            const isMatch = difference < 0.01;
+            
+            if (totalEntered === 0) {
+                totalValidation.innerHTML = '<span class="text-muted">Enter individual amounts for selected participants</span>';
+                submitButton.disabled = true;
+            } else if (isMatch) {
+                totalValidation.innerHTML = '<span class="text-success"><i class="fas fa-check-circle"></i> Amounts match! (' + totalEntered.toFixed(2) + ')</span>';
+                submitButton.disabled = false;
+            } else {
+                totalValidation.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle"></i> Total entered: $' + totalEntered.toFixed(2) + ' (Expected: $' + totalAmount.toFixed(2) + ')</span>';
+                submitButton.disabled = true;
+            }
+        }
+        
+        function updateFormValidation() {
+            const checkedBoxes = document.querySelectorAll('.participant-checkbox:checked');
+            const submitButton = document.querySelector('#addExpenseModal button[type="submit"]');
+            const enableCustom = document.getElementById('enableCustomAmounts').checked;
+            
+            if (checkedBoxes.length === 0) {
+                submitButton.disabled = true;
+                submitButton.title = 'Please select at least one participant';
+            } else if (!enableCustom) {
+                submitButton.disabled = false;
+                submitButton.title = '';
+            } else {
+                updateTotalAndValidation();
+            }
+        }
+        
+        // Update amounts when total or participants change
+        document.addEventListener('DOMContentLoaded', function() {
+            const totalInput = document.getElementById('amount');
+            if (totalInput) {
+                totalInput.addEventListener('input', function() {
+                    updateTotalAndValidation();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

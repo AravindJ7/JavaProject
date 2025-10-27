@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups - Expense Split</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-calculator me-2"></i>
+                Expense Split
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/users">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/groups">
+                            <i class="fas fa-layer-group me-1"></i>Groups
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h1 class="display-5">
+                    <i class="fas fa-layer-group text-success me-3"></i>
+                    Group Management
+                </h1>
+                <p class="lead text-muted">Create and manage expense groups for tracking shared costs.</p>
+            </div>
+        </div>
+
+        <!-- Add Group Form -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-plus me-2"></i>
+                            Create New Group
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/groups}" th:object="${groupRequest}" method="post">
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label for="name" class="form-label">
+                                        <i class="fas fa-tag me-1"></i>Group Name
+                                    </label>
+                                    <input type="text" class="form-control" id="name" th:field="*{name}" 
+                                           placeholder="Enter group name (e.g., Trip to Paris)" required>
+                                </div>
+                                <div class="col-md-4 mb-3 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-plus me-2"></i>Create Group
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Groups List -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            All Groups
+                            <span class="badge bg-success ms-2" th:text="${groups != null ? groups.size() : 0}">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${groups != null and !groups.empty}">
+                            <div class="row">
+                                <div class="col-md-6 col-lg-4 mb-4" th:each="group : ${groups}">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <h5 class="card-title mb-0" th:text="${group.name}">Group Name</h5>
+                                                <span class="badge bg-success" th:text="'ID: ' + ${group.groupId}">ID: 1</span>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    Created: <span th:text="${#temporals.format(group.createdAt, 'MMM dd, yyyy')}">Jan 01, 2024</span>
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-users me-1"></i>
+                                                    Members: <span class="badge bg-primary" th:text="${group.members.size()}">0</span>
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="mb-3" th:if="${group.members != null and !group.members.empty}">
+                                                <small class="text-muted d-block mb-1">Members:</small>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <span class="badge bg-light text-dark" 
+                                                          th:each="member : ${group.members}" 
+                                                          th:text="${member.name}">John Doe</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="d-grid gap-2">
+                                                <a th:href="@{/groups/{id}(id=${group.groupId})}" 
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-eye me-1"></i>View Details
+                                                </a>
+                                                <button type="button" class="btn btn-outline-success btn-sm" 
+                                                        th:onclick="'addMemberToGroup(' + ${group.groupId} + ')'">
+                                                    <i class="fas fa-user-plus me-1"></i>Add Member
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${groups == null or groups.empty}" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-layer-group fa-3x mb-3"></i>
+                                <h5>No Groups Found</h5>
+                                <p>Start by creating your first expense group.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Member Modal -->
+        <div class="modal fade" id="addMemberModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-user-plus me-2"></i>
+                            Add Member to Group
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form id="addMemberForm" method="post">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="userId" class="form-label">Select User</label>
+                                <select class="form-select" id="userId" name="userId" required>
+                                    <option value="">Choose a user...</option>
+                                    <option th:each="user : ${users}" 
+                                            th:value="${user.userId}" 
+                                            th:text="${user.name + ' (' + user.email + ')'}">John Doe (john@example.com)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-plus me-1"></i>Add Member
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-calculator me-1"></i>
+                Expense Split Application - Built with Spring Boot & Thymeleaf
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/app.js"></script>
+    <script>
+        function addMemberToGroup(groupId) {
+            const form = document.getElementById('addMemberForm');
+            form.action = '/groups/' + groupId + '/members';
+            
+            const modal = new bootstrap.Modal(document.getElementById('addMemberModal'));
+            modal.show();
+        }
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Split - Home</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-calculator me-2"></i>
+                Expense Split
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/users">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/groups">
+                            <i class="fas fa-layer-group me-1"></i>Groups
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Hero Section -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="jumbotron bg-gradient-primary text-white p-5 rounded-3">
+                    <h1 class="display-4">
+                        <i class="fas fa-calculator me-3"></i>
+                        Welcome to Expense Split
+                    </h1>
+                    <p class="lead">Easily track shared expenses, settle balances among friends, and generate group-wise expense reports.</p>
+                    <hr class="my-4" style="border-color: rgba(255,255,255,0.3);">
+                    <p>Create groups, add members, track expenses, and automatically calculate who owes whom!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-5">
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-primary mb-3">
+                            <i class="fas fa-users fa-3x"></i>
+                        </div>
+                        <h3 class="card-title" th:text="${userCount}">0</h3>
+                        <p class="card-text text-muted">Total Users</p>
+                        <a href="/users" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Manage Users
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <div class="text-success mb-3">
+                            <i class="fas fa-layer-group fa-3x"></i>
+                        </div>
+                        <h3 class="card-title" th:text="${groupCount}">0</h3>
+                        <p class="card-text text-muted">Active Groups</p>
+                        <a href="/groups" class="btn btn-success">
+                            <i class="fas fa-plus me-1"></i>Manage Groups
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-bolt text-warning me-2"></i>
+                    Quick Actions
+                </h2>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <div class="text-primary mb-3">
+                                    <i class="fas fa-user-plus fa-2x"></i>
+                                </div>
+                                <h5 class="card-title">Add New User</h5>
+                                <p class="card-text">Create a new user account to start tracking expenses.</p>
+                                <a href="/users" class="btn btn-outline-primary">
+                                    <i class="fas fa-plus me-1"></i>Add User
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center">
+                                <div class="text-success mb-3">
+                                    <i class="fas fa-layer-group fa-2x"></i>
+                                </div>
+                                <h5 class="card-title">Create Group</h5>
+                                <p class="card-text">Start a new expense group for your friends or family.</p>
+                                <a href="/groups" class="btn btn-outline-success">
+                                    <i class="fas fa-plus me-1"></i>Create Group
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Groups -->
+        <div class="row" th:if="${groups != null and !groups.empty}">
+            <div class="col-12">
+                <h2 class="mb-4">
+                    <i class="fas fa-history text-secondary me-2"></i>
+                    Recent Groups
+                </h2>
+                <div class="row">
+                    <div class="col-md-6 col-lg-4 mb-3" th:each="group : ${groups}">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <h5 class="card-title" th:text="${group.name}">Group Name</h5>
+                                <p class="card-text text-muted">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Created: <span th:text="${#temporals.format(group.createdAt, 'MMM dd, yyyy')}">Date</span>
+                                </p>
+                                <p class="card-text text-muted">
+                                    <i class="fas fa-users me-1"></i>
+                                    Members: <span th:text="${group.members.size()}">0</span>
+                                </p>
+                                <a th:href="@{/groups/{id}(id=${group.groupId})}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-calculator me-1"></i>
+                Expense Split Application - Built with Spring Boot & Thymeleaf
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
+
+

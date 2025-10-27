@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${group.name + ' - Balances'}">Balances - Expense Split</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-calculator me-2"></i>
+                Expense Split
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i>Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/users">
+                            <i class="fas fa-users me-1"></i>Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/groups">
+                            <i class="fas fa-layer-group me-1"></i>Groups
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <span th:text="${success}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item"><a href="/groups">Groups</a></li>
+                <li class="breadcrumb-item">
+                    <a th:href="@{/groups/{id}(id=${group.groupId})}" th:text="${group.name}">Group Name</a>
+                </li>
+                <li class="breadcrumb-item active">Balances</li>
+            </ol>
+        </nav>
+
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h1 class="display-6 mb-2">
+                                    <i class="fas fa-calculator text-info me-3"></i>
+                                    Balance Summary
+                                </h1>
+                                <p class="text-muted mb-0" th:text="'Group: ' + ${group.name}">Group: Trip to Paris</p>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button type="button" class="btn btn-success me-2" th:onclick="'showSettlementModal(' + ${group.groupId} + ')'">
+                                    <i class="fas fa-handshake me-1"></i>Settle Up
+                                </button>
+                                <a th:href="@{/groups/{id}(id=${group.groupId})}" class="btn btn-primary">
+                                    <i class="fas fa-arrow-left me-1"></i>Back to Group
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Balance Cards -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Individual Balances
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${balances != null and !balances.empty}">
+                            <div class="row">
+                                <div class="col-md-6 col-lg-4 mb-4" th:each="balance : ${balances}" th:data-user-id="${balance.userId}">
+                                    <div class="card border-0 shadow-sm h-100">
+                                        <div class="card-body text-center">
+                                            <div class="mb-3">
+                                                <div class="avatar-circle bg-primary text-white mx-auto mb-2" style="width: 60px; height: 60px;">
+                                                    <i class="fas fa-user fa-lg"></i>
+                                                </div>
+                                                <h5 class="card-title mb-1" th:text="${balance.userName}">John Doe</h5>
+                                                <small class="text-muted" th:text="${balance.userEmail}">john@example.com</small>
+                                            </div>
+                                            
+
+                                            
+                                            <div class="mb-3">
+                                                <div th:if="${balance.netBalance != null and balance.netBalance > 0}" class="alert alert-success mb-0">
+                                                    <i class="fas fa-arrow-up me-1"></i>
+                                                    <strong>$<span th:text="${#numbers.formatDecimal(balance.netBalance, 0, 2)}">70.00</span></strong>
+                                                    <small class="d-block">Owed Money</small>
+                                                </div>
+                                                <div th:if="${balance.netBalance != null and balance.netBalance < 0}" class="alert alert-danger mb-0">
+                                                    <i class="fas fa-arrow-down me-1"></i>
+                                                    <strong>$<span th:text="${#numbers.formatDecimal(balance.netBalance * -1, 0, 2)}">80.00</span></strong>
+                                                    <small class="d-block">Owes Money</small>
+                                                </div>
+                                                <div th:if="${balance.netBalance == null or balance.netBalance == 0}" class="alert alert-info mb-0">
+                                                    <i class="fas fa-equals me-1"></i>
+                                                    <strong>$0.00</strong>
+                                                    <small class="d-block">Settled Up</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${balances == null or balances.empty}" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fas fa-calculator fa-3x mb-3"></i>
+                                <h5>No Balance Data</h5>
+                                <p>Add some expenses to see balance calculations.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settlement Suggestions -->
+        <div class="row" th:if="${balances != null and !balances.empty}">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">
+                            <i class="fas fa-lightbulb me-2"></i>
+                            Settlement Suggestions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>How to settle up:</strong> People who owe money should pay those who are owed money.
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-success">
+                                    <i class="fas fa-arrow-up me-1"></i>
+                                    People Owed Money
+                                </h6>
+                                <div th:each="balance : ${balances}" th:if="${balance.netBalance != null and balance.netBalance > 0}">
+                                    <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                                        <span th:text="${balance.userName}">John Doe</span>
+                                        <span class="badge bg-success">$<span th:text="${#numbers.formatDecimal(balance.netBalance, 0, 2)}">70.00</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-danger">
+                                    <i class="fas fa-arrow-down me-1"></i>
+                                    People Who Owe Money
+                                </h6>
+                                <div th:each="balance : ${balances}" th:if="${balance.netBalance != null and balance.netBalance < 0}">
+                                    <div class="d-flex justify-content-between align-items-center p-2 border rounded mb-2">
+                                        <span th:text="${balance.userName}">Bob Wilson</span>
+                                        <span class="badge bg-danger">$<span th:text="${#numbers.formatDecimal(balance.netBalance * -1, 0, 2)}">80.00</span></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6 class="text-primary">
+                                <i class="fas fa-handshake me-1"></i>
+                                Recommended Settlements
+                            </h6>
+                            <div class="alert alert-light">
+                                <div th:each="balance : ${balances}" th:if="${balance.netBalance != null and balance.netBalance < 0}">
+                                    <div th:each="creditor : ${balances}" th:if="${creditor.netBalance != null and creditor.netBalance > 0}">
+                                        <div>
+                                            <i class="fas fa-arrow-right text-primary me-2"></i>
+                                            <span th:text="${balance.userName}">Bob Wilson</span>
+                                            <span class="text-muted">should pay</span>
+                                            <span th:text="${creditor.userName}">John Doe</span>
+                                            <span class="text-muted">$</span>
+                                            <span th:text="${#numbers.formatDecimal(balance.netBalance * -1, 1, 2)}">70.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Settlement Modal -->
+    <div class="modal fade" id="settlementModal" tabindex="-1" aria-labelledby="settlementModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="settlementModalLabel">
+                        <i class="fas fa-handshake me-2"></i>Confirm Settlements
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Enter the amount each person wants to settle.
+                    </div>
+                    <div id="settlementList"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="confirmSettlements">
+                        <i class="fas fa-check me-1"></i>Confirm Settlements
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light text-center text-muted py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">
+                <i class="fas fa-calculator me-1"></i>
+                Expense Split Application - Built with Spring Boot & Thymeleaf
+            </p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="/js/app.js"></script>
+</body>
+</html>
+
